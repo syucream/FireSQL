@@ -1,24 +1,90 @@
 package com.syucream.jiresql;
 
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.Firestore;
-import org.junit.jupiter.api.Test;
-
 import static org.mockito.Mockito.*;
 
+import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 public class FirestoreQueryFactoryTest {
+  private Firestore firestoreMock;
+  private CollectionReference collMock;
+  private Query queryMock;
 
-    @Test
-    void getTest() throws JireSqlQueryException {
-        Firestore firestoreMock = mock(Firestore.class);
-        CollectionReference collMock = mock(CollectionReference.class);
+  @BeforeEach
+  void init() {
+    firestoreMock = mock(Firestore.class);
+    collMock = mock(CollectionReference.class);
+    queryMock = mock(Query.class);
 
-        when(firestoreMock.collection(any())).thenReturn(collMock);
+    when(firestoreMock.collection(any())).thenReturn(collMock);
+    when(collMock.select(anyString())).thenReturn(queryMock);
+  }
 
-        String qs = "SELECT item FROM table";
-        FirestoreQueryFactory.get(firestoreMock, qs);
+  @Test
+  void getTest() throws JireSqlQueryException {
+    String qs = "SELECT item FROM table";
 
-        verify(firestoreMock, times(1)).collection("table");
-        verify(collMock, times(1)).select("item");
-    }
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+  }
+
+  @Test
+  void getTestWithWhereEqualsTo() throws JireSqlQueryException {
+    String qs = "SELECT item FROM table WHERE item = 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).whereEqualTo("item", 42L);
+  }
+
+  @Test
+  void getTestWithWhereGreaterThan() throws JireSqlQueryException {
+    String qs = "SELECT item FROM table WHERE item > 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).whereGreaterThan("item", 42L);
+  }
+
+  @Test
+  void getTestWithWhereGreaterThanOrEqualsTo() throws JireSqlQueryException {
+    String qs = "SELECT item FROM table WHERE item >= 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).whereGreaterThanOrEqualTo("item", 42L);
+  }
+
+  @Test
+  void getTestWithWhereLessThan() throws JireSqlQueryException {
+    String qs = "SELECT item FROM table WHERE item < 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).whereLessThan("item", 42L);
+  }
+
+  @Test
+  void getTestWithWhereLessThanOrEqualsTo() throws JireSqlQueryException {
+    String qs = "SELECT item FROM table WHERE item <= 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).whereLessThanOrEqualTo("item", 42L);
+  }
 }
