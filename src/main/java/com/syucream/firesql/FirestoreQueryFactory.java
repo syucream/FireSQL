@@ -1,4 +1,4 @@
-package com.syucream.jiresql;
+package com.syucream.firesql;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
@@ -22,13 +22,13 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 
 public class FirestoreQueryFactory {
 
-  public static Query get(Firestore db, String qs) throws JireSqlQueryException {
+  public static Query get(Firestore db, String qs) throws FireSQLQueryException {
     Select select;
     try {
       Statement stmt = CCJSqlParserUtil.parse(qs);
       select = (Select) stmt;
     } catch (JSQLParserException e) {
-      throw new JireSqlQueryException(e.getMessage());
+      throw new FireSQLQueryException(e.getMessage());
     }
 
     final PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
@@ -38,7 +38,7 @@ public class FirestoreQueryFactory {
     final TablesNamesFinder tableNamesFinder = new TablesNamesFinder();
     final List<String> tables = tableNamesFinder.getTableList(select);
     if (tables.size() != 1) {
-      throw new JireSqlQueryException("too many table names");
+      throw new FireSQLQueryException("too many table names");
     }
 
     Query q = db.collection(tables.get(0)).select(items);
@@ -51,7 +51,7 @@ public class FirestoreQueryFactory {
     return q;
   }
 
-  public static Query extractExpression(Query q, Expression e) throws JireSqlQueryException {
+  public static Query extractExpression(Query q, Expression e) throws FireSQLQueryException {
     // TODO support nested
 
     // TODO support more expression types
@@ -86,13 +86,13 @@ public class FirestoreQueryFactory {
 
       q = q.whereLessThanOrEqualTo(left, right);
     } else {
-      throw new JireSqlQueryException("unsupported expression");
+      throw new FireSQLQueryException("unsupported expression");
     }
 
     return q;
   }
 
-  public static Object extractValue(Expression e) throws JireSqlQueryException {
+  public static Object extractValue(Expression e) throws FireSQLQueryException {
     Object rv;
 
     if (e instanceof LongValue) {
@@ -102,7 +102,7 @@ public class FirestoreQueryFactory {
     } else if (e instanceof StringValue) {
       rv = ((StringValue) e).getValue();
     } else {
-      throw new JireSqlQueryException("unsupported value in expression");
+      throw new FireSQLQueryException("unsupported value in expression");
     }
 
     return rv;

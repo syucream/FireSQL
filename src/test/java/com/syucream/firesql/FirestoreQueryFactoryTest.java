@@ -1,4 +1,4 @@
-package com.syucream.jiresql;
+package com.syucream.firesql;
 
 import static org.mockito.Mockito.*;
 
@@ -24,7 +24,7 @@ public class FirestoreQueryFactoryTest {
   }
 
   @Test
-  void getTest() throws JireSqlQueryException {
+  void getTest() throws FireSQLQueryException {
     String qs = "SELECT item FROM table";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
@@ -34,7 +34,7 @@ public class FirestoreQueryFactoryTest {
   }
 
   @Test
-  void getTestWithWhereEqualsTo() throws JireSqlQueryException {
+  void getTestWithWhereEqualsTo() throws FireSQLQueryException {
     String qs = "SELECT item FROM table WHERE item = 42";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
@@ -45,7 +45,7 @@ public class FirestoreQueryFactoryTest {
   }
 
   @Test
-  void getTestWithWhereGreaterThan() throws JireSqlQueryException {
+  void getTestWithWhereGreaterThan() throws FireSQLQueryException {
     String qs = "SELECT item FROM table WHERE item > 42";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
@@ -56,7 +56,7 @@ public class FirestoreQueryFactoryTest {
   }
 
   @Test
-  void getTestWithWhereGreaterThanOrEqualsTo() throws JireSqlQueryException {
+  void getTestWithWhereGreaterThanOrEqualsTo() throws FireSQLQueryException {
     String qs = "SELECT item FROM table WHERE item >= 42";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
@@ -67,7 +67,7 @@ public class FirestoreQueryFactoryTest {
   }
 
   @Test
-  void getTestWithWhereLessThan() throws JireSqlQueryException {
+  void getTestWithWhereLessThan() throws FireSQLQueryException {
     String qs = "SELECT item FROM table WHERE item < 42";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
@@ -78,7 +78,7 @@ public class FirestoreQueryFactoryTest {
   }
 
   @Test
-  void getTestWithWhereLessThanOrEqualsTo() throws JireSqlQueryException {
+  void getTestWithWhereLessThanOrEqualsTo() throws FireSQLQueryException {
     String qs = "SELECT item FROM table WHERE item <= 42";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
