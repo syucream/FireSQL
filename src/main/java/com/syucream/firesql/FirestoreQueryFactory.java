@@ -8,6 +8,7 @@ import java.util.Objects;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -25,6 +26,8 @@ import net.sf.jsqlparser.statement.select.Offset;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 
 public class FirestoreQueryFactory {
@@ -34,14 +37,22 @@ public class FirestoreQueryFactory {
     try {
       Statement stmt = CCJSqlParserUtil.parse(qs);
       select = (Select) stmt;
-    } catch (JSQLParserException e) {
+    } catch (JSQLParserException | ClassCastException e) {
       throw new FireSQLQueryException(e.getMessage());
     }
 
     // SELECT
     final PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
-    final String[] items =
-        plainSelect.getSelectItems().stream().map(Object::toString).toArray(String[]::new);
+    final List<SelectItem> selectItems = plainSelect.getSelectItems();
+    for (SelectItem i : selectItems) {
+      if (i instanceof SelectExpressionItem) {
+        SelectExpressionItem ii = (SelectExpressionItem) i;
+        if (ii.getExpression() instanceof Function) {
+          throw new FireSQLQueryException("The function is unsupported: " + i.toString());
+        }
+      }
+    }
+    final String[] items = selectItems.stream().map(Object::toString).toArray(String[]::new);
 
     // FROM
     final TablesNamesFinder tableNamesFinder = new TablesNamesFinder();
@@ -95,7 +106,7 @@ public class FirestoreQueryFactory {
    * @return
    * @throws FireSQLQueryException
    */
-  public static Query extractExpression(Query q, Expression e) throws FireSQLQueryException {
+  static Query extractExpression(Query q, Expression e) throws FireSQLQueryException {
     if (e instanceof EqualsTo) {
       final EqualsTo eq = (EqualsTo) e;
       final String left = eq.getLeftExpression().toString();
@@ -144,7 +155,7 @@ public class FirestoreQueryFactory {
    * @return
    * @throws FireSQLQueryException
    */
-  public static Object extractValue(Expression e) throws FireSQLQueryException {
+  static Object extractValue(Expression e) throws FireSQLQueryException {
     Object rv;
 
     if (e instanceof DoubleValue) {

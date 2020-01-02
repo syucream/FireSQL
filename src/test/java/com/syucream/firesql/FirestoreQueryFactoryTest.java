@@ -33,7 +33,8 @@ public class FirestoreQueryFactoryTest {
 
     when(firestoreMock.collection(any())).thenReturn(collMock);
     when(collMock.select(anyString())).thenReturn(queryMock);
-    when(collMock.select(anyString(), any())).thenReturn(queryMock);
+    when(collMock.select(anyString(), anyString())).thenReturn(queryMock);
+    when(collMock.select(anyString(), anyString(), anyString())).thenReturn(queryMock);
     when(queryMock.whereEqualTo(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereGreaterThan(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereGreaterThanOrEqualTo(anyString(), any())).thenReturn(queryMock);
@@ -153,6 +154,51 @@ public class FirestoreQueryFactoryTest {
     verify(collMock, times(1)).select("item1", "item2");
     verify(queryMock, times(1)).orderBy("item1", Query.Direction.ASCENDING);
     verify(queryMock, times(1)).orderBy("item2", Query.Direction.DESCENDING);
+  }
+
+  @Test
+  void getComplexTest() throws FireSQLQueryException {
+    final String qs =
+        "SELECT id, name, age "
+            + "FROM users "
+            + "WHERE age >= 30 AND age < 40 "
+            + "ORDER BY id "
+            + "LIMIT 100 OFFSET 200";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("users");
+    verify(collMock, times(1)).select("id", "name", "age");
+    verify(queryMock, times(1)).whereGreaterThanOrEqualTo("age", 30L);
+    verify(queryMock, times(1)).whereLessThan("age", 40L);
+    verify(queryMock, times(1)).orderBy("id", Query.Direction.ASCENDING);
+    verify(queryMock, times(1)).limit(100);
+    verify(queryMock, times(1)).offset(200);
+  }
+
+  @Test
+  void getBadQueryTest() {
+    final List<String> badQueries =
+        Arrays.asList(
+            // Not SQL
+            "WHATEVER",
+
+            // Unsupported statements
+            "INSERT INTO users (id, name) VALUES (42, 'name')",
+            "UPDATE users SET age = 42 WHERE id = 42",
+            "DELETE FROM users WHERE id = 42",
+
+            // Unsupported aggregations
+            "SELECT COUNT(*) FROM users",
+            "SELECT AVG(score) FROM table GROUP BY age",
+
+            // Unsupported where expressions
+            "SELECT id, name FROM users WHERE id != 42",
+            "SELECT id FROM users WHERE name IS NOT NULL");
+
+    for (String qs : badQueries) {
+      assertThrows(FireSQLQueryException.class, () -> FirestoreQueryFactory.get(firestoreMock, qs));
+    }
   }
 
   @Test
