@@ -1,5 +1,7 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
+
     id 'com.github.sherter.google-java-format' version '0.8'
 }
 
@@ -23,3 +25,17 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+// To publish it to local repo
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.syucream'
+            artifactId = 'firesql'
+            version = '0.0.1'
+
+            from components.java
+        }
+    }
+}
+

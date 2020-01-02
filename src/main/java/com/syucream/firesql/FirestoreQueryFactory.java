@@ -8,7 +8,10 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.StringValue;
+import net.sf.jsqlparser.expression.TimestampValue;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
@@ -51,10 +54,17 @@ public class FirestoreQueryFactory {
     return q;
   }
 
+  /**
+   * Extract a SQL expression be able to handle in Firestore
+   *
+   * <p>TODO support array-contains
+   *
+   * @param q
+   * @param e
+   * @return
+   * @throws FireSQLQueryException
+   */
   public static Query extractExpression(Query q, Expression e) throws FireSQLQueryException {
-    // TODO support nested
-
-    // TODO support more expression types
     if (e instanceof EqualsTo) {
       final EqualsTo eq = (EqualsTo) e;
       final String left = eq.getLeftExpression().toString();
@@ -85,22 +95,37 @@ public class FirestoreQueryFactory {
       final Object right = extractValue(mteq.getRightExpression());
 
       q = q.whereLessThanOrEqualTo(left, right);
+    } else if (e instanceof AndExpression) {
+      final AndExpression and = (AndExpression) e;
+      q = extractExpression(q, and.getLeftExpression());
+      q = extractExpression(q, and.getRightExpression());
     } else {
-      throw new FireSQLQueryException("unsupported expression");
+      throw new FireSQLQueryException("unsupported expression: " + e.toString());
     }
 
     return q;
   }
 
+  /**
+   * Extract a SQL value as a Firestore value
+   *
+   * @param e
+   * @return
+   * @throws FireSQLQueryException
+   */
   public static Object extractValue(Expression e) throws FireSQLQueryException {
     Object rv;
 
-    if (e instanceof LongValue) {
-      rv = ((LongValue) e).getValue();
-    } else if (e instanceof DoubleValue) {
+    if (e instanceof DoubleValue) {
       rv = ((DoubleValue) e).getValue();
+    } else if (e instanceof LongValue) {
+      rv = ((LongValue) e).getValue();
     } else if (e instanceof StringValue) {
       rv = ((StringValue) e).getValue();
+    } else if (e instanceof TimestampValue) {
+      rv = ((TimestampValue) e).getValue();
+    } else if (e instanceof NullValue) {
+      rv = null;
     } else {
       throw new FireSQLQueryException("unsupported value in expression");
     }
