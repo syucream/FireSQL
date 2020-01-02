@@ -5,6 +5,8 @@ plugins {
     id 'com.github.sherter.google-java-format' version '0.8'
 }
 
+version = '0.0.1'
+
 repositories {
     jcenter()
 }
@@ -32,7 +34,6 @@ publishing {
         maven(MavenPublication) {
             groupId = 'com.syucream'
             artifactId = 'firesql'
-            version = '0.0.1'
 
             from components.java
         }
