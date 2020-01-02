@@ -6,7 +6,7 @@ import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
 
 public class FireSQL {
-  private Firestore db = null;
+  private Firestore db;
 
   public FireSQL(Firestore db) {
     this.db = db;

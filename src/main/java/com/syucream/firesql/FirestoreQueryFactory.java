@@ -2,6 +2,7 @@ package com.syucream.firesql;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
+import com.google.cloud.firestore.Query.Direction;
 import java.util.List;
 import java.util.Objects;
 import net.sf.jsqlparser.JSQLParserException;
@@ -19,6 +20,9 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Limit;
+import net.sf.jsqlparser.statement.select.Offset;
+import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.TablesNamesFinder;
@@ -34,10 +38,12 @@ public class FirestoreQueryFactory {
       throw new FireSQLQueryException(e.getMessage());
     }
 
+    // SELECT
     final PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
     final String[] items =
         plainSelect.getSelectItems().stream().map(Object::toString).toArray(String[]::new);
 
+    // FROM
     final TablesNamesFinder tableNamesFinder = new TablesNamesFinder();
     final List<String> tables = tableNamesFinder.getTableList(select);
     if (tables.size() != 1) {
@@ -46,9 +52,34 @@ public class FirestoreQueryFactory {
 
     Query q = db.collection(tables.get(0)).select(items);
 
+    // WHERE
     final Expression where = plainSelect.getWhere();
     if (Objects.nonNull(where)) {
       q = extractExpression(q, where);
+    }
+
+    // LIMIT
+    final Limit limit = plainSelect.getLimit();
+    if (Objects.nonNull(limit) && !limit.isLimitNull() && !limit.isLimitAll()) {
+      final long v = ((LongValue) limit.getRowCount()).getValue();
+      q = q.limit(Math.toIntExact(v));
+    }
+
+    // OFFSET
+    final Offset offset = plainSelect.getOffset();
+    if (Objects.nonNull(offset)) {
+      final long offsetVal = offset.getOffset();
+      q = q.offset(Math.toIntExact(offsetVal));
+    }
+
+    // ORDER BY
+    final List<OrderByElement> orderByElements = plainSelect.getOrderByElements();
+    if (Objects.nonNull(orderByElements)) {
+      for (OrderByElement e : orderByElements) {
+        final String field = e.getExpression().toString();
+        final Direction direction = e.isAsc() ? Direction.ASCENDING : Direction.DESCENDING;
+        q = q.orderBy(field, direction);
+      }
     }
 
     return q;

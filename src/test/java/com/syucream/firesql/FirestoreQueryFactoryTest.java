@@ -33,21 +33,25 @@ public class FirestoreQueryFactoryTest {
 
     when(firestoreMock.collection(any())).thenReturn(collMock);
     when(collMock.select(anyString())).thenReturn(queryMock);
+    when(collMock.select(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereEqualTo(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereGreaterThan(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereGreaterThanOrEqualTo(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereLessThan(anyString(), any())).thenReturn(queryMock);
     when(queryMock.whereLessThanOrEqualTo(anyString(), any())).thenReturn(queryMock);
+    when(queryMock.limit(anyInt())).thenReturn(queryMock);
+    when(queryMock.offset(anyInt())).thenReturn(queryMock);
+    when(queryMock.orderBy(anyString(), any())).thenReturn(queryMock);
   }
 
   @Test
   void getTest() throws FireSQLQueryException {
-    final String qs = "SELECT item FROM table";
+    final String qs = "SELECT item1, item2 FROM table";
 
     FirestoreQueryFactory.get(firestoreMock, qs);
 
     verify(firestoreMock, times(1)).collection("table");
-    verify(collMock, times(1)).select("item");
+    verify(collMock, times(1)).select("item1", "item2");
   }
 
   @Test
@@ -115,6 +119,40 @@ public class FirestoreQueryFactoryTest {
     verify(collMock, times(1)).select("item");
     verify(queryMock, times(1)).whereGreaterThan("item", 0L);
     verify(queryMock, times(1)).whereLessThan("item", 100L);
+  }
+
+  @Test
+  void getLimitTest() throws FireSQLQueryException {
+    final String qs = "SELECT item FROM table LIMIT 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).limit(42);
+  }
+
+  @Test
+  void getOffsetTest() throws FireSQLQueryException {
+    final String qs = "SELECT item FROM table OFFSET 42";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item");
+    verify(queryMock, times(1)).offset(42);
+  }
+
+  @Test
+  void getGroupByTest() throws FireSQLQueryException {
+    final String qs = "SELECT item1, item2 FROM table ORDER BY item1, item2 DESC";
+
+    FirestoreQueryFactory.get(firestoreMock, qs);
+
+    verify(firestoreMock, times(1)).collection("table");
+    verify(collMock, times(1)).select("item1", "item2");
+    verify(queryMock, times(1)).orderBy("item1", Query.Direction.ASCENDING);
+    verify(queryMock, times(1)).orderBy("item2", Query.Direction.DESCENDING);
   }
 
   @Test
