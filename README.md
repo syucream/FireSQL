@@ -1,5 +1,7 @@
 # FireSQL
 
+[ ![Download](https://api.bintray.com/packages/syucream/maven/com.syucream.firesql/images/download.svg?version=0.0.1) ](https://bintray.com/syucream/maven/com.syucream.firesql/0.0.1/link)
+
 A SQL-like interface to [Google Cloud Firestore](https://firebase.google.com/docs/firestore) in Java
 
 # Synopsis
