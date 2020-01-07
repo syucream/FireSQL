@@ -32,6 +32,14 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 
 public class FirestoreQueryFactory {
 
+  /**
+   * Get Firestore query object from SQL query string with parsing it as a SQL statement.
+   *
+   * @param db Firestore connection
+   * @param qs a SQL query string
+   * @return a Firestore query object
+   * @throws FireSQLQueryException a query creation exception
+   */
   public static Query get(Firestore db, String qs) throws FireSQLQueryException {
     Select select;
     try {
